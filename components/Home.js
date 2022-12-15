@@ -1,7 +1,7 @@
 import { addDoc, collection, getDocs, query } from "firebase/firestore";
 import { db } from "../firebase";
-import { FlatList, SafeAreaView, Text, View } from "react-native";
-import { useEffect, useState } from "react";
+import { FlatList, SafeAreaView, Text, TouchableOpacity, View } from "react-native";
+import React, { useEffect, useState } from "react";
 import styles from "../Styles";
 
 const fetchDoctors = async () => {
@@ -21,11 +21,11 @@ const fetchDoctors = async () => {
   }
 }
 
-function HomeScreen({ route, navigation }) {
-  const { user } = route.params
+function HomeScreen({ route }) {
+  const uid = route.params
   const [ appointment, setAppointment ] = useState({
     doctorId: "",
-    userId: "",
+    userId: uid,
     appointmentDate: "2022-12-12T12:00",
   })
   const [ doctors, setDoctors ] = useState([])
@@ -40,16 +40,11 @@ function HomeScreen({ route, navigation }) {
     setAppointment({
       ...appointment,
       doctorId,
-      userId: "Sopb3vqqNmV8LIpf3fgdR7rq7fr1",
     });
-
-    console.log(appointment);
 
     try {
       const colRef = collection(db, "appointment");
-      const response = await addDoc(colRef, appointment.value);
-
-      console.log(response);
+      await addDoc(colRef, appointment);
     } catch (e) {
       console.error(e);
     }
@@ -67,11 +62,24 @@ function HomeScreen({ route, navigation }) {
     );
   };
 
+  const itemRendered = (item) => {
+    return (
+      <View>
+        <Text style={ styles.item }>{ item.fullname }</Text>
+        <Text style={ styles.item }>{ item.id }</Text>
+
+        <TouchableOpacity onPress={() => takeAppointment(item.id) } style={ styles.btnPrimary }>
+          <Text>Prendre rendez-vous</Text>
+        </TouchableOpacity>
+      </View>
+    )
+  }
+
   return (
     <SafeAreaView>
       <FlatList
         data={ doctors }
-        renderItem={ ({ item }) => <Text style={ styles.item }>{ item.fullname }</Text> }
+        renderItem={ ({ item }) => itemRendered(item) }
         keyExtractor={ ({ id }) => id }
         ItemSeparatorComponent={ myItemSeparator }
         ListEmptyComponent={ myListEmpty }
@@ -83,11 +91,8 @@ function HomeScreen({ route, navigation }) {
             fontWeight: 'bold',
             textDecorationLine: 'underline'
           } }>
-            List of doctors
+            Liste des médecins disponible
           </Text>
-        ) }
-        ListFooterComponent={ () => (
-          <Text style={ { fontSize: 30, textAlign: "center", marginBottom: 20, fontWeight: 'bold' } }>Thank You</Text>
         ) }
       />
 

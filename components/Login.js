@@ -28,7 +28,8 @@ function LoginScreen({ navigation }) {
     signInWithEmailAndPassword(auth, email, password)
       .then((userCredential) => {
         setUser(userCredential.user)
-        navigation.navigate('Home');
+
+        navigation.navigate('Home', userCredential.user.uid);
       })
       .catch(error => {
         console.error(error)
