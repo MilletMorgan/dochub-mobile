@@ -1,46 +1,71 @@
-// In App.js in a new project
-
 import * as React from 'react';
-import { Button, Text, View } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
+import { ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { NavigationContainer, useNavigation } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
-function HomeScreen({ navigation }) {
+import { createUserWithEmailAndPassword, getAuth, signInWithEmailAndPassword } from 'firebase/auth'
+import { initializeApp } from "firebase/app";
+import { firebaseConfig } from "./firebase";
+
+function HomeScreen() {
   return (
     <View style={ { flex: 1, alignItems: 'center', justifyContent: 'center' } }>
       <Text>Home Screen</Text>
-      <Button
-        title="Go to Details"
-        onPress={ () => {
-          /* 1. Navigate to the Details route with params */
-          navigation.navigate('Details', {
-            itemId: 86,
-            otherParam: 'anything you want here',
-          });
-        } }
-      />
     </View>
   );
 }
 
-function DetailsScreen({ route, navigation }) {
-  /* 2. Get the param */
-  const { itemId, otherParam } = route.params;
+function LoginScreen() {
+  const [ email, setEmail ] = React.useState('')
+  const [ password, setPassword ] = React.useState('')
+  const navigation = useNavigation()
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+
+  const handleCreateAccount = () => {
+    createUserWithEmailAndPassword(auth, email, password)
+      .then((userCredential) => {
+        console.log('Account created')
+        const user = userCredential.user;
+        console.log(user)
+      })
+      .catch(error => {
+        console.error(error)
+      })
+  }
+
+  const handleSignIn = () => {
+    signInWithEmailAndPassword(auth, email, password)
+      .then((userCredential) => {
+        console.log('User logged')
+        const user = userCredential.user;
+        console.log(user)
+        navigation.navigate('Home');
+      })
+      .catch(error => {
+        console.error(error)
+      })
+  }
+
   return (
     <View style={ { flex: 1, alignItems: 'center', justifyContent: 'center' } }>
-      <Text>Details Screen</Text>
-      <Text>itemId: { JSON.stringify(itemId) }</Text>
-      <Text>otherParam: { JSON.stringify(otherParam) }</Text>
-      <Button
-        title="Go to Details... again"
-        onPress={ () =>
-          navigation.push('Details', {
-            itemId: Math.floor(Math.random() * 100),
-          })
-        }
-      />
-      <Button title="Go to Home" onPress={ () => navigation.navigate('Home') }/>
-      <Button title="Go back" onPress={ () => navigation.goBack() }/>
+      <ScrollView>
+        <View>
+          <Text>Email</Text>
+          <TextInput onChangeText={ (text) => setEmail(text) }/>
+        </View>
+        <View>
+          <Text>Password</Text>
+          <TextInput onChangeText={ (text) => setPassword(text) } secureTextEntry={ true }/>
+        </View>
+        <TouchableOpacity onPress={ handleSignIn }>
+          <Text>Login</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={ handleCreateAccount }>
+          <Text>Create account</Text>
+        </TouchableOpacity>
+      </ScrollView>
     </View>
   );
 }
@@ -50,9 +75,9 @@ const Stack = createNativeStackNavigator();
 function App() {
   return (
     <NavigationContainer>
-      <Stack.Navigator>
-        <Stack.Screen name="Home" component={ HomeScreen } options={ { title: 'Overview' } }/>
-        <Stack.Screen name="Details" component={ DetailsScreen }/>
+      <Stack.Navigator initialRouteName="Login">
+        <Stack.Screen name="Login" component={ LoginScreen }/>
+        <Stack.Screen name="Home" component={ HomeScreen }/>
       </Stack.Navigator>
     </NavigationContainer>
   );
